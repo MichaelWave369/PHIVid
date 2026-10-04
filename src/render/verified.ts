@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 
 import type { VideoRenderPlan } from "../contracts.js";
-import { digestPlan } from "../receipt.js";
+import { digestCanonical, digestPlan } from "../receipt.js";
 import {
   buildFFmpegArgs,
   type AccelerationPreference,
@@ -19,10 +19,11 @@ export interface ArtifactEvidence {
   sizeBytes: number;
 }
 
-export interface VerifiedRenderReceipt {
-  schemaVersion: "phivid.render-receipt.v0.1";
+export interface VerifiedRenderReceiptPayload {
+  schemaVersion: "phivid.render-receipt.v0.2";
   planId: string;
   planDigest: string;
+  commandDigest: string;
   ffmpegVersion: string;
   ffprobeVersion: string;
   encoder: EncoderSelection;
@@ -31,6 +32,10 @@ export interface VerifiedRenderReceipt {
   probe: MediaProbe;
   elapsedMs: number;
   warnings: readonly string[];
+}
+
+export interface VerifiedRenderReceipt extends VerifiedRenderReceiptPayload {
+  receiptDigest: string;
 }
 
 export interface VerifiedRenderInput {
@@ -60,6 +65,40 @@ async function artifactEvidence(
   };
 }
 
+function assertExpectedSourceHash(
+  assetId: string,
+  expected: string | undefined,
+  actual: string
+): void {
+  if (!expected) {
+    return;
+  }
+
+  const normalizedExpected = expected.toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(normalizedExpected)) {
+    throw new Error(`Invalid expected SHA-256 for source asset ${assetId}`);
+  }
+
+  if (normalizedExpected !== actual) {
+    throw new Error(
+      `Source hash mismatch for ${assetId}: expected ${normalizedExpected}, got ${actual}`
+    );
+  }
+}
+
+export function digestRenderReceipt(
+  payload: VerifiedRenderReceiptPayload
+): string {
+  return digestCanonical(payload);
+}
+
+export function verifyRenderReceiptDigest(
+  receipt: VerifiedRenderReceipt
+): boolean {
+  const { receiptDigest, ...payload } = receipt;
+  return digestRenderReceipt(payload) === receiptDigest;
+}
+
 export async function renderWithEvidence(
   input: VerifiedRenderInput
 ): Promise<VerifiedRenderReceipt> {
@@ -83,7 +122,10 @@ export async function renderWithEvidence(
       if (!path) {
         throw new Error(`No bound file path for source asset ${source.id}`);
       }
-      return artifactEvidence(path, source.id);
+
+      const evidence = await artifactEvidence(path, source.id);
+      assertExpectedSourceHash(source.id, source.sha256, evidence.sha256);
+      return evidence;
     })
   );
 
@@ -93,6 +135,11 @@ export async function renderWithEvidence(
     outputPath: input.outputPath,
     availableEncoders: new Set(capabilities.encoders),
     acceleration: input.acceleration ?? "auto"
+  });
+
+  const commandDigest = digestCanonical({
+    executable: ffmpegExecutable,
+    args: command.args
   });
 
   const startedAt = process.hrtime.bigint();
@@ -112,10 +159,11 @@ export async function renderWithEvidence(
     warnings.push("render_used_cpu_encoder");
   }
 
-  return {
-    schemaVersion: "phivid.render-receipt.v0.1",
+  const payload: VerifiedRenderReceiptPayload = {
+    schemaVersion: "phivid.render-receipt.v0.2",
     planId: input.plan.id,
     planDigest: digestPlan(input.plan),
+    commandDigest,
     ffmpegVersion: capabilities.ffmpegVersion,
     ffprobeVersion: capabilities.ffprobeVersion,
     encoder: command.selection,
@@ -124,5 +172,10 @@ export async function renderWithEvidence(
     probe,
     elapsedMs,
     warnings
+  };
+
+  return {
+    ...payload,
+    receiptDigest: digestRenderReceipt(payload)
   };
 }
