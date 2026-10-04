@@ -96,7 +96,7 @@ test("verified render receipt binds plan, source, output, encoder, and probe fac
       timeoutMs: 30_000
     });
 
-    assert.equal(receipt.schemaVersion, "phivid.render-receipt.v0.1");
+    assert.equal(receipt.schemaVersion, "phivid.render-receipt.v0.2");
     assert.equal(receipt.planId, plan.id);
     assert.equal(receipt.planDigest, digestPlan(plan));
     assert.equal(receipt.encoder.encoder, "libx264");
@@ -107,6 +107,8 @@ test("verified render receipt binds plan, source, output, encoder, and probe fac
     assert.equal(receipt.sourceArtifacts[0]?.assetId, "source-a");
     assert.match(receipt.sourceArtifacts[0]?.sha256 ?? "", /^[a-f0-9]{64}$/);
     assert.match(receipt.outputArtifact.sha256, /^[a-f0-9]{64}$/);
+    assert.match(receipt.commandDigest, /^[a-f0-9]{64}$/);
+    assert.match(receipt.receiptDigest, /^[a-f0-9]{64}$/);
     assert.ok(receipt.outputArtifact.sizeBytes > 1_000);
     assert.ok(receipt.elapsedMs > 0);
     assert.deepEqual(receipt.warnings, ["render_used_cpu_encoder"]);
