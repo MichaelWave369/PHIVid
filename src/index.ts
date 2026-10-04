@@ -40,3 +40,12 @@ export {
   type MediaProbe,
   type MediaStreamProbe
 } from "./ffmpeg/probe.js";
+
+export { sha256File } from "./evidence/hash.js";
+
+export {
+  renderWithEvidence,
+  type ArtifactEvidence,
+  type VerifiedRenderInput,
+  type VerifiedRenderReceipt
+} from "./render/verified.js";
