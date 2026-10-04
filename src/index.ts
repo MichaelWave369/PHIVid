@@ -58,3 +58,14 @@ export {
   type VerifiedRenderReceiptPayload
 } from "./render/verified.js";
 
+
+export {
+  buildPhiOSEvidenceRef,
+  digestPhiOSEvidenceEnvelope,
+  toPhiOSEvidenceEnvelope,
+  verifyPhiOSEvidenceEnvelope,
+  type PHIVidPhiOSEvidenceEnvelope,
+  type PHIVidPhiOSEvidenceEnvelopePayload,
+  type PhiOSEvidenceEnvelopeOptions,
+  type PhiOSEvidenceRef
+} from "./adapters/phios.js";
