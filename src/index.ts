@@ -9,7 +9,12 @@ export {
   type VideoSource
 } from "./contracts.js";
 
-export { createReceipt, digestPlan } from "./receipt.js";
+export {
+  canonicalJson,
+  createReceipt,
+  digestCanonical,
+  digestPlan
+} from "./receipt.js";
 export { validatePlan } from "./validate.js";
 
 export {
@@ -44,8 +49,12 @@ export {
 export { sha256File } from "./evidence/hash.js";
 
 export {
+  digestRenderReceipt,
   renderWithEvidence,
+  verifyRenderReceiptDigest,
   type ArtifactEvidence,
   type VerifiedRenderInput,
-  type VerifiedRenderReceipt
+  type VerifiedRenderReceipt,
+  type VerifiedRenderReceiptPayload
 } from "./render/verified.js";
+
