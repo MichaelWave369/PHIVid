@@ -26,3 +26,17 @@ export {
   probeFFmpeg,
   type FFmpegCapabilities
 } from "./ffmpeg/capabilities.js";
+
+export {
+  executeFFmpeg,
+  runProcess,
+  type ProcessOptions,
+  type ProcessResult
+} from "./ffmpeg/process.js";
+
+export {
+  probeMedia,
+  type MediaFormatProbe,
+  type MediaProbe,
+  type MediaStreamProbe
+} from "./ffmpeg/probe.js";
