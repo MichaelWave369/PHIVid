@@ -11,3 +11,18 @@ export {
 
 export { createReceipt, digestPlan } from "./receipt.js";
 export { validatePlan } from "./validate.js";
+
+export {
+  buildFFmpegArgs,
+  selectEncoder,
+  type AccelerationPreference,
+  type EncoderSelection,
+  type FFmpegCommandInput,
+  type VideoCodec
+} from "./ffmpeg/command.js";
+
+export {
+  parseEncoderNames,
+  probeFFmpeg,
+  type FFmpegCapabilities
+} from "./ffmpeg/capabilities.js";
