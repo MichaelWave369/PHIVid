@@ -17,9 +17,16 @@ function canonicalize(value: unknown): unknown {
   return value;
 }
 
+export function canonicalJson(value: unknown): string {
+  return JSON.stringify(canonicalize(value));
+}
+
+export function digestCanonical(value: unknown): string {
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
+}
+
 export function digestPlan(plan: VideoRenderPlan): string {
-  const canonical = JSON.stringify(canonicalize(plan));
-  return createHash("sha256").update(canonical).digest("hex");
+  return digestCanonical(plan);
 }
 
 export function createReceipt(plan: VideoRenderPlan): VideoReceipt {
